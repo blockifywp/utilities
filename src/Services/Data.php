@@ -12,6 +12,7 @@ use function get_template;
 use function get_template_directory;
 use function str_contains;
 use function wp_get_theme;
+use const DEBUG_BACKTRACE_IGNORE_ARGS;
 use const WP_PLUGIN_DIR;
 
 class Data {
@@ -44,6 +45,11 @@ class Data {
 		}
 	}
 
+	/**
+	 * Returns the path to the calling file.
+	 *
+	 * @return string
+	 */
 	private function get_calling_file(): string {
 		static $file = null;
 
@@ -51,7 +57,7 @@ class Data {
 			return $file;
 		}
 
-		$backtrace  = debug_backtrace();
+		$backtrace  = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
 		$file_trace = [];
 		$autoload   = null;
 
