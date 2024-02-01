@@ -4,7 +4,7 @@ declare( strict_types=1 );
 
 namespace Blockify\Core\Interfaces;
 
-use Blockify\Core\Services\Styles;
+use Blockify\Core\Services\InlineStyles;
 
 /**
  * Styleable interface.
@@ -18,10 +18,10 @@ interface Styleable {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Styles $styles Styles instance.
+	 * @param InlineStyles $styles Styles instance.
 	 *
 	 * @return void
 	 */
-	public function styles( Styles $styles ): void;
+	public function styles( InlineStyles $styles ): void;
 
 }

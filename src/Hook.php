@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Services;
+namespace Blockify\Utilities;
 
 use ReflectionClass;
 use ReflectionException;
@@ -17,7 +17,7 @@ use function preg_match;
  *
  * @package Blockify\Core
  */
-class Hooks {
+class Hook {
 
 	/**
 	 * Hook methods based on annotation.
@@ -26,7 +26,7 @@ class Hooks {
 	 *
 	 * @return void
 	 */
-	public function add_annotations( $object_or_class ): void {
+	public static function annotations( $object_or_class ): void {
 		if ( ! is_object( $object_or_class ) && ! is_string( $object_or_class ) ) {
 			return;
 		}
@@ -45,7 +45,7 @@ class Hooks {
 				continue;
 			}
 
-			$meta_data = $this->get_metadata( (string) $method->getDocComment() );
+			$meta_data = self::get_metadata( (string) $method->getDocComment() );
 
 			if ( $meta_data === null ) {
 				continue;
@@ -53,7 +53,7 @@ class Hooks {
 
 			add_filter(
 				$meta_data['tag'],
-				[ $this, $method->name ],
+				[ $object_or_class, $method->name ],
 				$meta_data['priority'],
 				$method->getNumberOfParameters()
 			);
@@ -67,7 +67,7 @@ class Hooks {
 	 *
 	 * @return ?array{tag: string, priority: int}|null
 	 */
-	private function get_metadata( string $doc_comment ): ?array {
+	private static function get_metadata( string $doc_comment ): ?array {
 		$regex   = '/^\s+\*\s+@hook\s+([\w\/._=-]+)(?:\s+(\d+|first|last))?\s*$/m';
 		$matches = [];
 

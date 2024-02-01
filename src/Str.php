@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Utilities;
+namespace Blockify\Utilities;
 
 use function preg_replace;
 use function str_contains;

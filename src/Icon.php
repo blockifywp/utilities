@@ -2,10 +2,14 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Utilities;
+namespace Blockify\Utilities;
 
+use WP_REST_Request;
+use WP_REST_Server;
+use function add_action;
 use function apply_filters;
 use function basename;
+use function current_user_can;
 use function file_exists;
 use function file_get_contents;
 use function get_stylesheet_directory;
@@ -157,6 +161,104 @@ class Icon {
 		$cache[ $cache_key ] = trim( $dom->saveHTML() );
 
 		return $cache[ $cache_key ];
+	}
+
+	/**
+	 * Registers icon REST endpoint.
+	 *
+	 * @since 0.0.1
+	 *
+	 * @param string $namespace Route namespace.
+	 * @param string $route     Route path.
+	 *
+	 * @return void
+	 */
+	public static function register_rest_route( string $namespace = 'blockify/v1', string $route = '/icons/' ): void {
+		$args = [
+			'permission_callback' => static fn() => current_user_can( 'edit_posts' ),
+			'callback'            => static fn( WP_REST_Request $request ): array => self::get_icon_data( $request ),
+			'methods'             => WP_REST_Server::READABLE,
+			[
+				'args' => [
+					'sets' => [
+						'required' => false,
+						'type'     => 'string',
+					],
+					'set'  => [
+						'required' => false,
+						'type'     => 'string',
+					],
+				],
+			],
+		];
+
+		add_action(
+			'rest_api_init',
+			static fn() => register_rest_route( $namespace, $route, $args )
+		);
+	}
+
+	/**
+	 * Returns icon data for rest endpoint
+	 *
+	 * @since 0.4.8
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 *
+	 * @return mixed array|string
+	 */
+	private static function get_icon_data( WP_REST_Request $request ) {
+		$icon_data = [];
+		$icon_sets = Icon::get_icon_sets();
+
+		foreach ( $icon_sets as $icon_set => $set_dir ) {
+			$icons = glob( $set_dir . '/*.svg' );
+
+			foreach ( $icons as $icon ) {
+				$name = basename( $icon, '.svg' );
+				$icon = file_get_contents( $icon );
+
+				if ( $icon_set === 'WordPress' ) {
+					$icon = str_replace(
+						[ 'fill="none"' ],
+						[ 'fill="currentColor"' ],
+						$icon
+					);
+				}
+
+				// Remove comments.
+				$icon = preg_replace( '/<!--(.|\s)*?-->/', '', $icon );
+
+				// Remove new lines.
+				$icon = preg_replace( '/\s+/', ' ', $icon );
+
+				// Remove tabs.
+				$icon = preg_replace( '/\t+/', '', $icon );
+
+				// Remove spaces between tags.
+				$icon = preg_replace( '/>\s+</', '><', $icon );
+
+				$icon_data[ $icon_set ][ $name ] = trim( $icon );
+			}
+		}
+
+		if ( $request->get_param( 'set' ) ) {
+			$set = $request->get_param( 'set' );
+
+			if ( $request->get_param( 'icon' ) ) {
+
+				// TODO: Is string being used anywhere?
+				return $icon_data[ $set ][ $request->get_param( 'icon' ) ];
+			}
+
+			return $icon_data[ $set ];
+		}
+
+		if ( $request->get_param( 'sets' ) ) {
+			return array_keys( $icon_data );
+		}
+
+		return $icon_data;
 	}
 
 }

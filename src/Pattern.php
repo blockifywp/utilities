@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Utilities;
+namespace Blockify\Utilities;
 
 use function _cleanup_header_comment;
 use function explode;

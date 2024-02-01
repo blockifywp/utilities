@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Utilities;
+namespace Blockify\Utilities;
 
 use function _wp_to_kebab_case;
 use function is_array;
