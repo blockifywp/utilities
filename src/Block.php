@@ -53,7 +53,7 @@ class Block {
 	 *
 	 * @return bool
 	 */
-	public static function is_editor_block_rendering(): bool {
+	public static function is_rendering_preview(): bool {
 		if ( is_admin() ) {
 			return true;
 		}

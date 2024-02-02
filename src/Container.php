@@ -34,10 +34,18 @@ class Container implements ContainerInterface {
 	 *
 	 * @since 0.1.0
 	 *
+	 * @param string $id Instance ID.
+	 *
 	 * @return self
 	 */
-	public static function factory(): self {
-		return new self();
+	public static function instance( string $id ): self {
+		static $instances = [];
+
+		if ( ! isset( $instances[ $id ] ) ) {
+			$instances[ $id ] = new self();
+		}
+
+		return $instances[ $id ] ?? new self();
 	}
 
 	/**
@@ -71,20 +79,14 @@ class Container implements ContainerInterface {
 	/**
 	 * Creates a new instance.
 	 *
-	 * @param string  $id       Abstract class name.
-	 * @param ?object $concrete Concrete class instance.
+	 * @param string $id   Abstract class name.
+	 * @param ?array $args Optional arguments.
 	 *
 	 * @return mixed
 	 */
-	public function create( string $id, ?object $concrete = null ) {
-		if ( $concrete ) {
-			$this->instances[ $id ] = $concrete;
-
-			return $this->instances[ $id ];
-		}
-
+	public function make( string $id, ?array $args = null ) {
 		try {
-			$this->instances[ $id ] = $this->resolve( $id );
+			$this->instances[ $id ] = $this->resolve( $id, $args );
 		} catch ( ContainerException | ReflectionException $e ) {
 			new WP_Error( static::class, $e->getMessage() );
 
@@ -103,11 +105,12 @@ class Container implements ContainerInterface {
 	 *
 	 * @throws ReflectionException|ContainerException If an instance cannot be resolved.
 	 *
-	 * @param string $id Abstract class name.
+	 * @param string $id   Abstract class name.
+	 * @param ?array $args Optional arguments.
 	 *
 	 * @return mixed
 	 */
-	private function resolve( string $id ) {
+	private function resolve( string $id, ?array $args = null ) {
 		if ( ! $this->has( $id ) ) {
 			$this->instances[ $id ] = null;
 		}
@@ -142,7 +145,9 @@ class Container implements ContainerInterface {
 
 		$constructor = $reflector->getConstructor();
 
-		if ( $constructor ) {
+		if ( $args ) {
+			$instance = $reflector->newInstanceArgs( $args );
+		} elseif ( $constructor ) {
 			$parameters   = $constructor->getParameters();
 			$dependencies = $this->resolve_parameters( $parameters );
 			$instance     = $reflector->newInstanceArgs( $dependencies );

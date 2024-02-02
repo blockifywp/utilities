@@ -5,12 +5,11 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use ReflectionClass;
-use ReflectionException;
 use ReflectionMethod;
 use function add_filter;
+use function explode;
 use function is_object;
-use function is_string;
-use function preg_match;
+use function trim;
 
 /**
  * Class Hooks.
@@ -22,20 +21,16 @@ class Hook {
 	/**
 	 * Hook methods based on annotation.
 	 *
-	 * @param object|string $object_or_class Object or class name.
+	 * @param object|string $object Object or class name.
 	 *
 	 * @return void
 	 */
-	public static function annotations( $object_or_class ): void {
-		if ( ! is_object( $object_or_class ) && ! is_string( $object_or_class ) ) {
+	public static function annotations( $object ): void {
+		if ( ! is_object( $object ) ) {
 			return;
 		}
 
-		try {
-			$reflection = new ReflectionClass( $object_or_class );
-		} catch ( ReflectionException $e ) {
-			return;
-		}
+		$reflection = new ReflectionClass( $object );
 
 		// Look for hook tag in all public methods.
 		foreach ( $reflection->getMethods( ReflectionMethod::IS_PUBLIC ) as $method ) {
@@ -53,7 +48,7 @@ class Hook {
 
 			add_filter(
 				$meta_data['tag'],
-				[ $object_or_class, $method->name ],
+				[ $object, $method->name ],
 				$meta_data['priority'],
 				$method->getNumberOfParameters()
 			);
@@ -68,17 +63,14 @@ class Hook {
 	 * @return ?array{tag: string, priority: int}|null
 	 */
 	private static function get_metadata( string $doc_comment ): ?array {
-		$regex   = '/^\s+\*\s+@hook\s+([\w\/._=-]+)(?:\s+(\d+|first|last))?\s*$/m';
-		$matches = [];
+		$line  = Str::between( '@hook', '*', $doc_comment, true );
+		$parts = explode( ' ', trim( $line ) );
+		$tag   = trim( $parts[0] ?? '' );
 
-		if ( preg_match( $regex, $doc_comment, $matches ) !== 1 ) {
-			return null;
-		}
-
-		return [
-			'tag'      => $matches[1] ?? '',
-			'priority' => $matches[2] ?? 10,
-		];
+		return $tag ? [
+			'tag'      => $tag,
+			'priority' => $parts[1] ?? 10,
+		] : null;
 	}
 
 }
