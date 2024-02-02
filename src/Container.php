@@ -6,12 +6,14 @@ namespace Blockify\Utilities;
 
 use Blockify\Utilities\Exceptions\ContainerException;
 use Blockify\Utilities\Exceptions\NotFoundException;
-use Blockify\Utilities\Interfaces\Registerable;
+use Blockify\Utilities\Interfaces\Instantiable;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionParameter;
-use WP_Error;
 use function is_callable;
 use function is_object;
 
@@ -20,7 +22,9 @@ use function is_object;
  *
  * @since 0.1.0
  */
-class Container implements ContainerInterface {
+class Container implements ContainerInterface, LoggerAwareInterface, Instantiable {
+
+	use LoggerAwareTrait;
 
 	/**
 	 * Instances.
@@ -30,22 +34,14 @@ class Container implements ContainerInterface {
 	private array $instances = [];
 
 	/**
-	 * Factory constructor.
+	 * Sets logger.
 	 *
-	 * @since 0.1.0
+	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @param string $id Instance ID.
-	 *
-	 * @return self
+	 * @return void
 	 */
-	public static function instance( string $id ): self {
-		static $instances = [];
-
-		if ( ! isset( $instances[ $id ] ) ) {
-			$instances[ $id ] = new self();
-		}
-
-		return $instances[ $id ] ?? new self();
+	public function setLogger( LoggerInterface $logger ): void {
+		$this->logger = $logger;
 	}
 
 	/**
@@ -77,7 +73,7 @@ class Container implements ContainerInterface {
 	}
 
 	/**
-	 * Creates a new instance.
+	 * Creates a new instance or returns an existing one.
 	 *
 	 * @param string $id   Abstract class name.
 	 * @param ?array $args Optional arguments.
@@ -85,32 +81,6 @@ class Container implements ContainerInterface {
 	 * @return mixed
 	 */
 	public function make( string $id, ?array $args = null ) {
-		try {
-			$this->instances[ $id ] = $this->resolve( $id, $args );
-		} catch ( ContainerException | ReflectionException $e ) {
-			new WP_Error( static::class, $e->getMessage() );
-
-			return null;
-		}
-
-		if ( $this->instances[ $id ] instanceof Registerable ) {
-			$this->instances[ $id ]->register( $this );
-		}
-
-		return $this->instances[ $id ];
-	}
-
-	/**
-	 * Creates a new instance or returns an existing one.
-	 *
-	 * @throws ReflectionException|ContainerException If an instance cannot be resolved.
-	 *
-	 * @param string $id   Abstract class name.
-	 * @param ?array $args Optional arguments.
-	 *
-	 * @return mixed
-	 */
-	private function resolve( string $id, ?array $args = null ) {
 		if ( ! $this->has( $id ) ) {
 			$this->instances[ $id ] = null;
 		}
@@ -119,10 +89,18 @@ class Container implements ContainerInterface {
 			return $this->instances[ $id ];
 		}
 
-		$reflector = new ReflectionClass( $id );
+		try {
+			$reflector = new ReflectionClass( $id );
+		} catch ( ReflectionException $e ) {
+			$this->logger->error( "Class {$id} does not exist.", [ 'exception' => $e ] );
+
+			return null;
+		}
 
 		if ( ! $reflector->isInstantiable() ) {
-			throw new ContainerException( "Class {$id} is not instantiable." );
+			$this->logger->error( "Class {$id} is not instantiable." );
+
+			return null;
 		}
 
 		$condition = true;
@@ -131,7 +109,13 @@ class Container implements ContainerInterface {
 			$method = $reflector->getMethod( 'condition' );
 
 			if ( $method->isStatic() ) {
-				$condition = $method->invoke( null );
+				try {
+					$condition = $method->invoke( null );
+				} catch ( ReflectionException $e ) {
+					$this->logger->error( "Cannot invoke condition method for {$id}.", [ 'exception' => $e ] );
+
+					return null;
+				}
 			}
 		}
 
@@ -145,18 +129,26 @@ class Container implements ContainerInterface {
 
 		$constructor = $reflector->getConstructor();
 
-		if ( $args ) {
-			$instance = $reflector->newInstanceArgs( $args );
-		} elseif ( $constructor ) {
-			$parameters   = $constructor->getParameters();
-			$dependencies = $this->resolve_parameters( $parameters );
-			$instance     = $reflector->newInstanceArgs( $dependencies );
-		} else {
-			$instance = $reflector->newInstance();
+		try {
+			if ( $args ) {
+				$instance = $reflector->newInstanceArgs( $args );
+			} elseif ( $constructor ) {
+				$parameters   = $constructor->getParameters();
+				$dependencies = $this->resolve_parameters( $parameters );
+				$instance     = $reflector->newInstanceArgs( $dependencies );
+			} else {
+				$instance = $reflector->newInstance();
+			}
+		} catch ( ReflectionException | ContainerException $e ) {
+			$this->logger->error( "Cannot instantiate class {$id}.", [ 'exception' => $e ] );
+
+			return null;
 		}
 
 		if ( ! is_object( $instance ) ) {
-			throw new ContainerException( "Class {$id} is not instantiable." );
+			$this->logger->error( "Class {$id} is not an object." );
+
+			return null;
 		}
 
 		$this->instances[ $id ] = $instance;
@@ -194,12 +186,10 @@ class Container implements ContainerInterface {
 					throw new ContainerException( "Cannot auto-resolve primitive type: '{$type_name}' for {$class_name}." );
 				}
 			} else {
-				$class_name = $type->getName();
+				$resolved = $this->make( $type->getName() );
 
-				try {
-					$dependencies[] = $this->resolve( $class_name );
-				} catch ( ContainerException | NotFoundException | ReflectionException $e ) {
-					throw new ContainerException( "Cannot auto-resolve class: '{$class_name}' for {$parameter->getDeclaringClass()->name}." );
+				if ( $resolved ) {
+					$dependencies[] = $resolved;
 				}
 			}
 		}
