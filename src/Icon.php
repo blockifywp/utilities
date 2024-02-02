@@ -53,7 +53,7 @@ class Icon {
 			$slug = basename( $dir );
 
 			$found[] = [
-				'label' => Str::to_title_case( $slug ),
+				'label' => Str::title_case( $slug ),
 				'value' => $slug,
 			];
 		}
@@ -144,7 +144,7 @@ class Icon {
 		$svg->setAttribute( 'aria-labelledby', $unique_id );
 		$svg->setAttribute( 'data-icon', $set . '-' . $name );
 
-		$label = Str::to_title_case( $name ) . __( ' Icon', 'blockify' );
+		$label = Str::title_case( $name ) . __( ' Icon', 'blockify' );
 		$title = DOM::create_element( 'title', $dom );
 
 		$title->appendChild( $dom->createTextNode( $label ) );
