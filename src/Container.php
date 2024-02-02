@@ -6,7 +6,7 @@ namespace Blockify\Core;
 
 use Blockify\Core\Exceptions\ContainerException;
 use Blockify\Core\Exceptions\NotFoundException;
-use Blockify\Core\Interfaces\Registerable;
+use Blockify\Utilities\Interfaces\Registerable;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;

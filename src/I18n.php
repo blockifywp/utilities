@@ -5,8 +5,8 @@ declare( strict_types=1 );
 namespace Blockify\Core\Services;
 
 use Blockify\Core\Data\Plugin;
-use Blockify\Core\Interfaces\Hookable;
 use Blockify\Core\Traits\HookAnnotations;
+use Blockify\Utilities\Interfaces\Hookable;
 
 /**
  * Class I18n.

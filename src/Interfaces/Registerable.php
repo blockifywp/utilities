@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Interfaces;
+namespace Blockify\Utilities\Interfaces;
 
 use Blockify\Core\Container;
 

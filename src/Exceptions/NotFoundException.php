@@ -2,7 +2,7 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Exceptions;
+namespace Blockify\Utilities\Exceptions;
 
 use Exception;
 use Psr\Container\NotFoundExceptionInterface;

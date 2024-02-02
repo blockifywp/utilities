@@ -2,12 +2,12 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Interfaces;
+namespace Blockify\Utilities\Interfaces;
 
 /**
  * Interface Hookable
  *
- * @package Blockify\Core\Interfaces
+ * @package Blockify\Utilities\Interfaces
  */
 interface Hookable {
 
