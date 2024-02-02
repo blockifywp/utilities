@@ -7,6 +7,7 @@ namespace Blockify\Utilities;
 use WP_REST_Request;
 use WP_REST_Server;
 use function add_action;
+use function add_filter;
 use function apply_filters;
 use function basename;
 use function current_user_can;
@@ -29,6 +30,8 @@ use const GLOB_ONLYDIR;
  * @since 1.0.0
  */
 class Icon {
+
+	const FILTER = 'blockify_icon_sets';
 
 	/**
 	 * Returns array of all icon sets and their directory path.
@@ -94,7 +97,7 @@ class Icon {
 		 *
 		 * @param array $icon_sets <string, string> Set name, set path.
 		 */
-		return apply_filters( 'blockify_icon_sets', $icon_sets );
+		return apply_filters( static::FILTER, $icon_sets );
 	}
 
 	/**
@@ -221,6 +224,23 @@ class Icon {
 		add_action(
 			'rest_api_init',
 			static fn() => register_rest_route( $namespace, $route, $args )
+		);
+	}
+
+	/**
+	 * Registers icon set.
+	 *
+	 * @since 0.0.1
+	 *
+	 * @param string $name Icon set name.
+	 * @param string $path Icon set path.
+	 *
+	 * @return void
+	 */
+	public static function register_icon_set( string $name, string $path ): void {
+		add_filter(
+			static::FILTER,
+			static fn( array $icon_sets ) => array_merge( $icon_sets, [ $name => $path ] )
 		);
 	}
 
