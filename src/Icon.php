@@ -16,6 +16,7 @@ use function get_stylesheet_directory;
 use function get_template_directory;
 use function glob;
 use function implode;
+use function is_dir;
 use function is_null;
 use function strtolower;
 use function trim;
@@ -58,7 +59,8 @@ class Icon {
 			];
 		}
 
-		$options   = get_option( 'blockify' )['iconSets'] ?? $found;
+		$db_option = get_option( 'blockify' )['iconSets'] ?? null;
+		$options   = $db_option ?: $found;
 		$icon_sets = [];
 
 		foreach ( $options as $option ) {
@@ -68,19 +70,19 @@ class Icon {
 				continue;
 			}
 
-			$utility = $utility_dir . '/public/icons/' . $value;
-			$parent  = $template_dir . '/assets/icons/' . $value;
-			$child   = $stylesheet_dir . '/assets/icons/' . $value;
+			$utility = $utility_dir . $value;
+			$parent  = $template_dir . $value;
+			$child   = $stylesheet_dir . $value;
 
-			if ( file_exists( $utility ) ) {
+			if ( is_dir( $utility ) ) {
 				$icon_sets[ $value ] = $utility;
 			}
 
-			if ( file_exists( $parent ) ) {
+			if ( is_dir( $parent ) ) {
 				$icon_sets[ $value ] = $parent;
 			}
 
-			if ( file_exists( $child ) ) {
+			if ( is_dir( $child ) ) {
 				$icon_sets[ $value ] = $child;
 			}
 		}
