@@ -4,6 +4,8 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
+use function capital_P_dangit;
+use function ltrim;
 use function preg_replace;
 use function str_contains;
 use function str_replace;
@@ -143,8 +145,10 @@ class Str {
 	 *
 	 * @return string
 	 */
-	public static function to_title_case( string $string, array $search = [ '-', '_' ] ): string {
-		return trim( ucwords( str_replace( $search, ' ', $string ) ) );
+	public static function title_case( string $string, array $search = [ '-', '_' ] ): string {
+		$title_case = trim( ucwords( str_replace( $search, ' ', $string ) ) );
+
+		return capital_P_dangit( $title_case );
 	}
 
 	/**
@@ -173,7 +177,7 @@ class Str {
 	 *
 	 * @return string String with leading slash added.
 	 */
-	public static function leadingslashit( $string ) {
+	public static function leadingslashit( string $string ): string {
 		return '/' . self::unleadingslashit( $string );
 	}
 
@@ -187,7 +191,7 @@ class Str {
 	 *
 	 * @return string String without the leading slashes.
 	 */
-	public static function unleadingslashit( $string ) {
+	public static function unleadingslashit( string $string ): string {
 		return ltrim( $string, '/\\' );
 	}
 }

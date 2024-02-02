@@ -4,7 +4,7 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities\Interfaces;
 
-use Blockify\Core\Container;
+use Blockify\Utilities\Container;
 
 interface Registerable {
 

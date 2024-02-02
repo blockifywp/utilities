@@ -22,6 +22,11 @@ use function trim;
 use function uniqid;
 use const GLOB_ONLYDIR;
 
+/**
+ * Icon utility class.
+ *
+ * @since 1.0.0
+ */
 class Icon {
 
 	/**
@@ -29,32 +34,31 @@ class Icon {
 	 *
 	 * @since 0.9.10
 	 *
-	 * @return array [ 'set' => 'path' ]
+	 * @return array <string, string>
 	 */
 	public static function get_icon_sets(): array {
-		$theme = [
-			[
-				'label' => 'WordPress',
-				'value' => 'wordpress',
-			],
-			[
-				'label' => 'Social',
-				'value' => 'social',
-			],
+		$utility_dir    = dirname( __DIR__ ) . '/public/icons/';
+		$template_dir   = get_template_directory() . '/assets/icons/';
+		$stylesheet_dir = get_stylesheet_directory() . '/assets/icons/';
+
+		$dirs = [
+			...glob( $utility_dir . '*', GLOB_ONLYDIR ),
+			...glob( $template_dir . '*', GLOB_ONLYDIR ),
+			...glob( $stylesheet_dir . '*', GLOB_ONLYDIR ),
 		];
 
-		$child_theme = glob( get_stylesheet_directory() . '/assets/icons/*', GLOB_ONLYDIR );
+		$found = [];
 
-		foreach ( $child_theme as $dir ) {
+		foreach ( $dirs as $dir ) {
 			$slug = basename( $dir );
 
-			$theme[] = [
+			$found[] = [
 				'label' => Str::to_title_case( $slug ),
 				'value' => $slug,
 			];
 		}
 
-		$options   = get_option( 'blockify' )['iconSets'] ?? $theme;
+		$options   = get_option( 'blockify' )['iconSets'] ?? $found;
 		$icon_sets = [];
 
 		foreach ( $options as $option ) {
@@ -64,8 +68,13 @@ class Icon {
 				continue;
 			}
 
-			$parent = get_template_directory() . '/assets/icons/' . $value;
-			$child  = get_stylesheet_directory() . '/assets/icons/' . $value;
+			$utility = $utility_dir . '/public/icons/' . $value;
+			$parent  = $template_dir . '/assets/icons/' . $value;
+			$child   = $stylesheet_dir . '/assets/icons/' . $value;
+
+			if ( file_exists( $utility ) ) {
+				$icon_sets[ $value ] = $utility;
+			}
 
 			if ( file_exists( $parent ) ) {
 				$icon_sets[ $value ] = $parent;
@@ -76,6 +85,13 @@ class Icon {
 			}
 		}
 
+		/**
+		 * Filters the icon sets.
+		 *
+		 * @since 0.9.10
+		 *
+		 * @param array $icon_sets <string, string> Set name, set path.
+		 */
 		return apply_filters( 'blockify_icon_sets', $icon_sets );
 	}
 
@@ -174,6 +190,14 @@ class Icon {
 	 * @return void
 	 */
 	public static function register_rest_route( string $namespace = 'blockify/v1', string $route = '/icons/' ): void {
+		static $registered = [];
+
+		if ( isset( $registered[ $namespace ] ) ) {
+			return;
+		}
+
+		$registered[ $namespace ] = $route;
+
 		$args = [
 			'permission_callback' => static fn() => current_user_can( 'edit_posts' ),
 			'callback'            => static fn( WP_REST_Request $request ): array => self::get_icon_data( $request ),

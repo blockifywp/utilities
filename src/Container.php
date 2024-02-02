@@ -2,10 +2,10 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core;
+namespace Blockify\Utilities;
 
-use Blockify\Core\Exceptions\ContainerException;
-use Blockify\Core\Exceptions\NotFoundException;
+use Blockify\Utilities\Exceptions\ContainerException;
+use Blockify\Utilities\Exceptions\NotFoundException;
 use Blockify\Utilities\Interfaces\Registerable;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
@@ -28,6 +28,17 @@ class Container implements ContainerInterface {
 	 * @var array
 	 */
 	private array $instances = [];
+
+	/**
+	 * Factory constructor.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return self
+	 */
+	public static function factory(): self {
+		return new self();
+	}
 
 	/**
 	 * Retrieves an instance.
@@ -60,11 +71,18 @@ class Container implements ContainerInterface {
 	/**
 	 * Creates a new instance.
 	 *
-	 * @param string $id Abstract class name.
+	 * @param string  $id       Abstract class name.
+	 * @param ?object $concrete Concrete class instance.
 	 *
 	 * @return mixed
 	 */
-	public function create( string $id ) {
+	public function create( string $id, ?object $concrete = null ) {
+		if ( $concrete ) {
+			$this->instances[ $id ] = $concrete;
+
+			return $this->instances[ $id ];
+		}
+
 		try {
 			$this->instances[ $id ] = $this->resolve( $id );
 		} catch ( ContainerException | ReflectionException $e ) {
