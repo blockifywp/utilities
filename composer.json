@@ -21,6 +21,6 @@
   },
   "require": {
     "psr/container": "^2.0@dev",
-    "psr/log": "^3.0@dev"
+    "psr/log": "^1"
   }
 }

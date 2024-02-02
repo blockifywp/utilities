@@ -7,7 +7,6 @@ namespace Blockify\Utilities;
 use Blockify\Utilities\Interfaces\Instantiable;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
-use Stringable;
 
 /**
  * Logger.
@@ -28,14 +27,13 @@ class Logger extends AbstractLogger implements Instantiable {
 	 *
 	 * @throws InvalidArgumentException
 	 *
-	 * @param mixed             $level
-	 * @param string|Stringable $message
-	 * @param mixed[]           $context
+	 * @param mixed  $level
+	 * @param string $message
+	 * @param array  $context
 	 *
 	 * @return void
-	 *
 	 */
-	public function log( $level, $message, $context = [] ): void {
+	public function log( $level, $message, array $context = [] ): void {
 		$this->log[] = [
 			'level'   => $level,
 			'message' => $message,
