@@ -18,10 +18,10 @@ interface Styleable {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param InlineStyles $styles Styles instance.
+	 * @param Inlinable $styles Inlinable service.
 	 *
 	 * @return void
 	 */
-	public function styles( InlineStyles $styles ): void;
+	public function styles( Inlinable $styles ): void;
 
 }

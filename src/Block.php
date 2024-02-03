@@ -5,6 +5,8 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use WP;
+use function function_exists;
+use function get_current_screen;
 use function implode;
 use function is_admin;
 use function parse_blocks;
@@ -71,6 +73,23 @@ class Block {
 		$route = $wp->query_vars['rest_route'];
 
 		return str_contains( $route, '/block-renderer/' );
+	}
+
+	/**
+	 * Checks if current screen is the block editor.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public static function is_editor(): bool {
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			return false;
+		}
+
+		$screen = get_current_screen();
+
+		return $screen->is_block_editor();
 	}
 
 	/**

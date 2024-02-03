@@ -5,7 +5,6 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use Blockify\Utilities\Exceptions\ContainerException;
-use Blockify\Utilities\Exceptions\NotFoundException;
 use Blockify\Utilities\Interfaces\Instantiable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -47,15 +46,13 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 	/**
 	 * Retrieves an instance.
 	 *
-	 * @throws NotFoundException
-	 *
 	 * @param string $id Abstract class name.
 	 *
 	 * @return mixed
 	 */
 	public function get( string $id ) {
 		if ( ! $this->has( $id ) ) {
-			throw new NotFoundException( $id );
+			$this->logger->error( "Class {$id} does not in container." );
 		}
 
 		return $this->instances[ $id ];

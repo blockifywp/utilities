@@ -16,10 +16,10 @@ interface Scriptable {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $template_html Template HTML.
+	 * @param Inlinable $scripts Inlinable service.
 	 *
-	 * @return string
+	 * @return void
 	 */
-	public function scripts( string $template_html ): string;
+	public function scripts( Inlinable $scripts ): void;
 
 }
