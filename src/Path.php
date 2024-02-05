@@ -18,7 +18,7 @@ use const WP_CONTENT_DIR;
  *
  * @since 1.0.0
  */
-class Package {
+class Path {
 
 	/**
 	 * Returns the package directory path.
@@ -28,7 +28,7 @@ class Package {
 	 *
 	 * @return string
 	 */
-	public static function dir( string $file, string $src ): string {
+	public static function get_package_dir( string $file, string $src ): string {
 		return trailingslashit(
 			implode(
 				DIRECTORY_SEPARATOR,
@@ -54,7 +54,7 @@ class Package {
 	 *
 	 * @return string
 	 */
-	public static function uri( string $dir ): string {
+	public static function get_package_url( string $dir ): string {
 		return str_replace( WP_CONTENT_DIR, content_url(), $dir );
 	}
 }
