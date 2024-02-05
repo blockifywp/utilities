@@ -5,7 +5,10 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use function debug_backtrace;
+use function defined;
 use function json_encode;
+use const SCRIPT_DEBUG;
+use const WP_DEBUG;
 
 /**
  * Class Debug.
@@ -13,6 +16,18 @@ use function json_encode;
  * @since 1.0.0
  */
 class Debug {
+
+	/**
+	 * Check if debug mode is enabled.
+	 *
+	 * @return bool
+	 */
+	public static function is_enabled(): bool {
+		$wp_debug     = defined( 'WP_DEBUG' ) && WP_DEBUG;
+		$script_debug = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG;
+
+		return $wp_debug || $script_debug;
+	}
 
 	/**
 	 * Log data to the console.
@@ -39,6 +54,13 @@ class Debug {
 		echo '</script>';
 	}
 
+	/**
+	 * Log data to the console.
+	 *
+	 * @param mixed $data Data to log.
+	 *
+	 * @return void
+	 */
 	public static function stacktrace(): array {
 		$backtrace  = debug_backtrace();
 		$stacktrace = [];

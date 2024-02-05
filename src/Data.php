@@ -2,19 +2,22 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Utilities\Traits;
+namespace Blockify\Utilities;
 
 use WP_Theme;
-use function debug_backtrace;
 use function dirname;
-use function end;
 use function get_template;
 use function get_template_directory;
 use function str_contains;
 use function wp_get_theme;
 use const WP_PLUGIN_DIR;
 
-trait Data {
+/**
+ * Data trait.
+ *
+ * @since 1.0.0
+ */
+class Data {
 
 	public string $file;
 	public string $dir;
@@ -32,8 +35,12 @@ trait Data {
 	public string $uri;
 	public string $update_uri;
 
-	public function __construct() {
-		$file       = $this->get_calling_file();
+	/**
+	 * Data constructor.
+	 *
+	 * @return void
+	 */
+	public function __construct( string $file ) {
 		$theme_dir  = dirname( get_template_directory() );
 		$plugin_dir = WP_PLUGIN_DIR;
 
@@ -42,35 +49,6 @@ trait Data {
 		} elseif ( str_contains( $file, $plugin_dir ) ) {
 			$this->set_from_plugin( $file, get_plugin_data( $file ) );
 		}
-	}
-
-	private function get_calling_file(): string {
-		static $file = null;
-
-		if ( ! is_null( $file ) ) {
-			return $file;
-		}
-
-		$backtrace  = debug_backtrace();
-		$file_trace = [];
-		$autoload   = null;
-
-		foreach ( $backtrace as $trace ) {
-
-			if ( isset( $trace['file'] ) ) {
-				$file_trace[] = $trace['file'];
-
-				if ( $autoload ) {
-					break;
-				}
-
-				if ( str_contains( $trace['file'], 'vendor/autoload.php' ) ) {
-					$autoload = $trace['file'];
-				}
-			}
-		}
-
-		return end( $file_trace );
 	}
 
 	/**

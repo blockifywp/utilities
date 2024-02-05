@@ -111,7 +111,7 @@ class Icon {
 	 *
 	 * @return string
 	 */
-	public static function get_icon( string $set, string $name, $size = null ): string {
+	public static function get_svg( string $set, string $name, $size = null ): string {
 		$set = strtolower( $set );
 
 		static $cache = [];

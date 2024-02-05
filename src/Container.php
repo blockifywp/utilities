@@ -5,25 +5,20 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use Blockify\Utilities\Exceptions\ContainerException;
-use Blockify\Utilities\Interfaces\Instantiable;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionParameter;
 use function is_callable;
 use function is_object;
+use function uniqid;
 
 /**
  * Simple auto-wiring dependency injection container.
  *
  * @since 0.1.0
  */
-class Container implements ContainerInterface, LoggerAwareInterface, Instantiable {
-
-	use LoggerAwareTrait;
+class Container implements ContainerInterface {
 
 	/**
 	 * Instances.
@@ -33,15 +28,11 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 	private array $instances = [];
 
 	/**
-	 * Sets logger.
+	 * Error log.
 	 *
-	 * @param LoggerInterface $logger Logger.
-	 *
-	 * @return void
+	 * @var array
 	 */
-	public function setLogger( LoggerInterface $logger ): void {
-		$this->logger = $logger;
-	}
+	private array $log = [];
 
 	/**
 	 * Retrieves an instance.
@@ -52,7 +43,7 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 	 */
 	public function get( string $id ) {
 		if ( ! $this->has( $id ) ) {
-			$this->logger->error( "Class {$id} does not in container." );
+			$this->log( "Class {$id} does not in container." );
 		}
 
 		return $this->instances[ $id ];
@@ -89,13 +80,13 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 		try {
 			$reflector = new ReflectionClass( $id );
 		} catch ( ReflectionException $e ) {
-			$this->logger->error( "Class {$id} does not exist.", [ 'exception' => $e ] );
+			$this->log( "Class {$id} does not exist.", $e );
 
 			return null;
 		}
 
 		if ( ! $reflector->isInstantiable() ) {
-			$this->logger->error( "Class {$id} is not instantiable." );
+			$this->log( "Class {$id} is not instantiable." );
 
 			return null;
 		}
@@ -109,7 +100,7 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 				try {
 					$condition = $method->invoke( null );
 				} catch ( ReflectionException $e ) {
-					$this->logger->error( "Cannot invoke condition method for {$id}.", [ 'exception' => $e ] );
+					$this->log( "Cannot invoke condition method for {$id}.", $e );
 
 					return null;
 				}
@@ -137,13 +128,13 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 				$instance = $reflector->newInstance();
 			}
 		} catch ( ReflectionException | ContainerException $e ) {
-			$this->logger->error( "Cannot instantiate class {$id}.", [ 'exception' => $e ] );
+			$this->log( "Cannot instantiate class {$id}.", $e );
 
 			return null;
 		}
 
 		if ( ! is_object( $instance ) ) {
-			$this->logger->error( "Class {$id} is not an object." );
+			$this->log( "Class {$id} is not an object." );
 
 			return null;
 		}
@@ -192,5 +183,22 @@ class Container implements ContainerInterface, LoggerAwareInterface, Instantiabl
 		}
 
 		return $dependencies;
+	}
+
+	/**
+	 * Logs with an arbitrary level.
+	 *
+	 * @param string $message   Message to log.
+	 * @param ?mixed $exception Optional exception to log.
+	 *
+	 * @return void
+	 */
+	private function log( string $message, $exception = null ): void {
+		$id               = uniqid( static::class );
+		$this->log[ $id ] = [ $message, $exception ];
+
+		if ( Debug::is_enabled() ) {
+			Debug::console_log( $this->log[ $id ] );
+		}
 	}
 }

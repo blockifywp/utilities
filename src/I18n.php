@@ -6,16 +6,13 @@ namespace Blockify\Core\Services;
 
 use Blockify\Core\Data\Plugin;
 use Blockify\Core\Traits\HookAnnotations;
-use Blockify\Utilities\Interfaces\Hookable;
 
 /**
  * Class I18n.
  *
  * @since 1.0.0
  */
-class I18n implements Hookable {
-
-	use HookAnnotations;
+class I18n {
 
 	private Plugin $plugin;
 
