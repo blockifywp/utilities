@@ -43,7 +43,7 @@ class Container implements ContainerInterface {
 	 */
 	public function get( string $id ) {
 		if ( ! $this->has( $id ) ) {
-			$this->log( "Class {$id} does not in container." );
+			$this->log( "Class {$id} not found in container." );
 		}
 
 		return $this->instances[ $id ];
