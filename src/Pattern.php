@@ -41,8 +41,8 @@ class Pattern {
 	 *
 	 * @return void
 	 */
-	public static function register_block_pattern_from_file( string $file ): void {
-		$pattern    = self::parse_pattern_file( $file );
+	public static function register_from_file( string $file ): void {
+		$pattern    = self::parse_file( $file );
 		$categories = $pattern['categories'] ?? [];
 
 		foreach ( $categories as $category ) {
@@ -73,7 +73,7 @@ class Pattern {
 	 *
 	 * @return array
 	 */
-	public static function parse_pattern_file( string $file ): array {
+	public static function parse_file( string $file ): array {
 		if ( ! $file ) {
 			return [];
 		}

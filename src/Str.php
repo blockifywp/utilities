@@ -23,7 +23,7 @@ use const PHP_EOL;
 class Str {
 
 	/**
-	 * Check if any of the given needles are in the haystack.
+	 * Checks if any of the given needles are in the haystack.
 	 *
 	 * @since 0.9.10
 	 *
@@ -40,6 +40,26 @@ class Str {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Checks if all given needles are in the haystack.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $haystack   The string to search.
+	 * @param mixed  ...$needles The strings to search for.
+	 *
+	 * @return bool
+	 */
+	public static function contains_all( string $haystack, ...$needles ): bool {
+		foreach ( $needles as $needle ) {
+			if ( ! str_contains( $haystack, $needle ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -194,4 +214,5 @@ class Str {
 	public static function unleadingslashit( string $string ): string {
 		return ltrim( $string, '/\\' );
 	}
+
 }

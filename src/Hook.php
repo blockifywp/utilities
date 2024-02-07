@@ -8,7 +8,8 @@ use ReflectionClass;
 use ReflectionMethod;
 use function add_filter;
 use function explode;
-use function is_object;
+use function preg_match_all;
+use function str_replace;
 use function trim;
 
 /**
@@ -21,15 +22,11 @@ class Hook {
 	/**
 	 * Hook methods based on annotation.
 	 *
-	 * @param object|string $object Object or class name.
+	 * @param object $object Object or class name.
 	 *
 	 * @return void
 	 */
-	public static function annotations( $object ): void {
-		if ( ! is_object( $object ) ) {
-			return;
-		}
-
+	public static function annotations( object $object ): void {
 		$reflection = new ReflectionClass( $object );
 
 		// Look for hook tag in all public methods.
@@ -40,37 +37,53 @@ class Hook {
 				continue;
 			}
 
-			$meta_data = self::get_metadata( (string) $method->getDocComment() );
+			$annotations = self::get_annotations( (string) $method->getDocComment() );
 
-			if ( $meta_data === null ) {
+			if ( ! $annotations ) {
 				continue;
 			}
 
-			add_filter(
-				$meta_data['tag'],
-				[ $object, $method->name ],
-				$meta_data['priority'],
-				$method->getNumberOfParameters()
-			);
+			foreach ( $annotations as $annotation ) {
+				add_filter(
+					$annotation['tag'],
+					[ $object, $method->name ],
+					$annotation['priority'],
+					$method->getNumberOfParameters()
+				);
+			}
 		}
 	}
 
 	/**
 	 * Read hook tag from docblock.
 	 *
-	 * @param string $doc_comment Docblock of a method.
+	 * @param string $doc_block Method doc block.
 	 *
-	 * @return ?array{tag: string, priority: int}|null
+	 * @return ?array
 	 */
-	private static function get_metadata( string $doc_comment ): ?array {
-		$line  = Str::between( '@hook', '*', $doc_comment, true );
-		$parts = explode( ' ', trim( $line ) );
-		$tag   = trim( $parts[0] ?? '' );
+	private static function get_annotations( string $doc_block ): ?array {
+		$pattern = '/@hook\s+([^\s]+)(\s+[0-9]+)?/';
 
-		return $tag ? [
-			'tag'      => $tag,
-			'priority' => $parts[1] ?? 10,
-		] : null;
+		preg_match_all( $pattern, $doc_block, $matches );
+
+		if ( ! isset( $matches[0] ) ) {
+			return null;
+		}
+
+		$annotations = [];
+
+		foreach ( $matches[0] as $annotation ) {
+			$annotation = str_replace( '@hook', '', $annotation );
+			$parts      = explode( ' ', trim( $annotation ) );
+			$tag        = trim( $parts[0] ?? '' );
+
+			$annotations[] = [
+				'tag'      => $tag,
+				'priority' => $parts[1] ?? 10,
+			];
+		}
+
+		return $annotations;
 	}
 
 }
