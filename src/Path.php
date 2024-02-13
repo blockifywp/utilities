@@ -9,11 +9,9 @@ use function content_url;
 use function dirname;
 use function explode;
 use function implode;
-use function str_replace;
 use function trailingslashit;
 use function trim;
 use const DIRECTORY_SEPARATOR;
-use const WP_CONTENT_DIR;
 
 /**
  * Package class.
@@ -25,17 +23,17 @@ class Path {
 	/**
 	 * Returns the package directory path.
 	 *
-	 * @param string $project_file Main plugin or theme file.
-	 * @param string $package_dir  Package src directory.
+	 * @param string $project_dir Main plugin or theme file.
+	 * @param string $package_dir Package src directory.
 	 *
 	 * @return string
 	 */
-	public static function get_package_dir( string $project_file, string $package_dir ): string {
+	public static function get_package_dir( string $project_dir, string $package_dir ): string {
 		return trailingslashit(
 			implode(
 				DIRECTORY_SEPARATOR,
 				[
-					dirname( $project_file ),
+					$project_dir,
 					static::get_parts( $package_dir, -3 ),
 				]
 			)
@@ -45,12 +43,14 @@ class Path {
 	/**
 	 * Returns the package URI.
 	 *
-	 * @param string $package_dir Package directory.
+	 * @param string $project_dir Package directory.
+	 * @param string $package_dir Package src directory.
 	 *
 	 * @return string
 	 */
-	public static function get_package_url( string $package_dir ): string {
-		return str_replace( WP_CONTENT_DIR, content_url(), $package_dir );
+	public static function get_package_url( string $project_dir, string $package_dir ): string {
+		$package_path = static::get_parts( $package_dir, -3, true );
+		return static::get_project_url( $project_dir ) . Str::unleadingslashit( $package_path );
 	}
 
 	/**

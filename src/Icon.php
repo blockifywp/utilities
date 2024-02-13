@@ -4,6 +4,8 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
+use DOMDocument;
+use DOMElement;
 use WP_REST_Request;
 use WP_REST_Server;
 use function add_action;
@@ -11,6 +13,7 @@ use function add_filter;
 use function apply_filters;
 use function basename;
 use function current_user_can;
+use function esc_html__;
 use function file_exists;
 use function file_get_contents;
 use function get_stylesheet_directory;
@@ -242,6 +245,52 @@ class Icon {
 			static::FILTER,
 			static fn( array $icon_sets ) => array_merge( $icon_sets, [ $name => $path ] )
 		);
+	}
+
+	/**
+	 * Returns placeholder icon dom element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMDocument $dom DOM document.
+	 *
+	 * @return DOMElement
+	 */
+	public static function get_placeholder( DOMDocument $dom ): DOMElement {
+		$svg_title = esc_html__( 'Image placeholder', 'blockify' );
+		$svg_icon  = <<<HTML
+<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 64 64" width="32" height="32">
+	<title>$svg_title</title>
+	<circle cx="52" cy="18" r="7"/>
+	<path d="M47 32.1 39 41 23 20.9 0 55.1h64z"/>
+</svg>
+HTML;
+
+		/**
+		 * Filters the SVG icon for the placeholder image.
+		 *
+		 * @since 1.3.0
+		 *
+		 * @param string $svg_icon  SVG icon.
+		 * @param string $svg_title SVG title.
+		 */
+		$svg_icon    = apply_filters( 'blockify_placeholder_svg', $svg_icon, $svg_title );
+		$svg_dom     = DOM::create( $svg_icon );
+		$svg_element = DOM::get_element( 'svg', $svg_dom );
+
+		if ( ! $svg_element ) {
+			return DOM::create_element( 'span', $dom );
+		}
+
+		$svg_classes   = explode( ' ', $svg_element->getAttribute( 'class' ) );
+		$svg_classes[] = 'wp-block-image__placeholder-icon';
+
+		$svg_element->setAttribute( 'class', implode( ' ', $svg_classes ) );
+		$svg_element->setAttribute( 'fill', 'currentColor' );
+
+		$imported = $dom->importNode( $svg_element, true );
+
+		return DOM::node_to_element( $imported );
 	}
 
 	/**
