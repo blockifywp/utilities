@@ -64,11 +64,11 @@ class Container implements ContainerInterface {
 	 * Creates a new instance or returns an existing one.
 	 *
 	 * @param string $id   Abstract class name.
-	 * @param ?array $args Optional arguments.
+	 * @param mixed  $args Optional arguments.
 	 *
 	 * @return mixed
 	 */
-	public function make( string $id, ?array $args = null ) {
+	public function make( string $id, ...$args ) {
 		if ( ! $this->has( $id ) ) {
 			$this->instances[ $id ] = null;
 		}
