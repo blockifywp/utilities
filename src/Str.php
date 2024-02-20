@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use function capital_P_dangit;
+use function lcfirst;
 use function ltrim;
 use function preg_replace;
 use function str_contains;
@@ -179,7 +180,7 @@ class Str {
 	 * @return string
 	 */
 	public static function camel_to_kebab( string $string ): string {
-		$strings = preg_split( '/(?=[A-Z])/', $string );
+		$strings = preg_split( '/(?=[A-Z])/', lcfirst( $string ) );
 
 		return strtolower( implode( '-', $strings ) );
 	}

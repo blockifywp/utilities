@@ -5,12 +5,17 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use WP_Theme;
+use function basename;
 use function dirname;
+use function function_exists;
+use function get_plugin_data;
 use function get_template;
-use function get_template_directory;
+use function plugin_basename;
+use function plugin_dir_url;
 use function str_contains;
+use function strip_tags;
+use function trailingslashit;
 use function wp_get_theme;
-use const WP_PLUGIN_DIR;
 
 /**
  * Data object.
@@ -19,38 +24,56 @@ use const WP_PLUGIN_DIR;
  */
 class Data {
 
-	public static string $file;
-	public static string $dir;
-	public static string $basename;
-	public static string $url;
-	public static string $slug;
-	public static string $name;
-	public static string $description;
-	public static string $author;
-	public static string $author_uri;
-	public static string $version;
-	public static string $min_php;
-	public static string $min_wp;
-	public static string $domain_path;
-	public static string $uri;
-	public static string $update_uri;
+	public string $file        = '';
+	public string $dir         = '';
+	public string $basename    = '';
+	public string $url         = '';
+	public string $slug        = '';
+	public string $name        = '';
+	public string $description = '';
+	public string $author      = '';
+	public string $author_uri  = '';
+	public string $version     = '';
+	public string $min_php     = '';
+	public string $min_wp      = '';
+	public string $domain_path = '';
+	public string $uri         = '';
+	public string $update_uri  = '';
 
 	/**
 	 * Data constructor.
 	 *
+	 * @param string $file Main plugin or theme file.
+	 *
+	 * @return void
+	 */
+	public function __construct( string $file ) {
+		if ( str_contains( $file, 'content/plugins' ) ) {
+			if ( ! function_exists( 'get_plugin_data' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
+
+			$this->from_plugin( $file, get_plugin_data( $file ) );
+		} elseif ( str_contains( $file, 'content/themes' ) ) {
+			$this->from_theme( wp_get_theme( get_template() ) );
+		}
+	}
+
+	/**
+	 * Data factory.
+	 *
+	 * @param string $file Main plugin or theme file.
+	 *
 	 * @return void
 	 */
 	public static function from( string $file ): self {
-		$theme_dir  = dirname( get_template_directory() );
-		$plugin_dir = WP_PLUGIN_DIR;
+		static $instances = [];
 
-		if ( str_contains( $file, $plugin_dir ) ) {
-			return self::plugin( $file, get_plugin_data( $file ) );
-		} elseif ( str_contains( $file, $theme_dir ) ) {
-			return self::theme( wp_get_theme( get_template() ) );
+		if ( ! isset( $instances[ $file ] ) ) {
+			$instances[ $file ] = new self( $file );
 		}
 
-		return new self();
+		return $instances[ $file ];
 	}
 
 	/**
@@ -61,25 +84,22 @@ class Data {
 	 *
 	 * @return void
 	 */
-	private static function plugin( string $file, array $data ): self {
-		$static               = new self();
-		$static::$file        = $file;
-		$static::$dir         = trailingslashit( dirname( $file ) );
-		$static::$url         = trailingslashit( plugin_dir_url( $file ) );
-		$static::$basename    = plugin_basename( $file );
-		$static::$name        = $data['Name'] ?? '';
-		$static::$slug        = $data['TextDomain'] ?? '';
-		$static::$description = $data['Description'] ?? '';
-		$static::$author      = $data['Author'] ?? '';
-		$static::$author_uri  = $data['AuthorURI'] ?? '';
-		$static::$version     = $data['Version'] ?? '';
-		$static::$uri         = $data['PluginURI'] ?? '';
-		$static::$domain_path = $data['DomainPath'] ?? '';
-		$static::$min_wp      = $data['RequiresWP'] ?? '';
-		$static::$min_php     = $data['RequiresPHP'] ?? '';
-		$static::$update_uri  = $data['UpdateURI'] ?? '';
-
-		return $static;
+	private function from_plugin( string $file, array $data ): void {
+		$this->file        = $file;
+		$this->dir         = trailingslashit( dirname( $file ) );
+		$this->url         = trailingslashit( plugin_dir_url( $file ) );
+		$this->basename    = plugin_basename( $file );
+		$this->name        = $data['Name'] ?? '';
+		$this->slug        = $data['TextDomain'] ?? '';
+		$this->description = $data['Description'] ?? '';
+		$this->author      = strip_tags( $data['Author'] ?? '' );
+		$this->author_uri  = $data['AuthorURI'] ?? '';
+		$this->version     = $data['Version'] ?? '';
+		$this->uri         = $data['PluginURI'] ?? '';
+		$this->domain_path = $data['DomainPath'] ?? '';
+		$this->min_wp      = $data['RequiresWP'] ?? '';
+		$this->min_php     = $data['RequiresPHP'] ?? '';
+		$this->update_uri  = $data['UpdateURI'] ?? '';
 	}
 
 	/**
@@ -87,27 +107,23 @@ class Data {
 	 *
 	 * @param WP_Theme $theme Theme instance.
 	 *
-	 * @return self
+	 * @return void
 	 */
-	private static function theme( WP_Theme $theme ): self {
-		$static               = new self();
-		$static::$dir         = trailingslashit( $theme->get_template_directory() );
-		$static::$url         = trailingslashit( $theme->get_template_directory_uri() );
-		$static::$slug        = $theme->get_template();
-		$static::$file        = self::$dir . DIRECTORY_SEPARATOR . self::$slug . '.php';
-		$static::$basename    = basename( self::$dir ) . DIRECTORY_SEPARATOR . basename( self::$file );
-		$static::$name        = $theme->get( 'Name' );
-		$static::$description = $theme->get( 'Description' );
-		$static::$author      = $theme->get( 'Author' );
-		$static::$author_uri  = $theme->get( 'AuthorURI' );
-		$static::$version     = $theme->get( 'Version' );
-		$static::$min_php     = $theme->get( 'RequiresPHP' );
-		$static::$min_wp      = $theme->get( 'RequiresWP' );
-		$static::$uri         = $theme->get( 'ThemeURI' );
-		$static::$domain_path = $theme->get( 'DomainPath' );
-		$static::$update_uri  = $theme->get( 'UpdateURI' );
-
-		return $static;
+	private function from_theme( WP_Theme $theme ): void {
+		$this->dir         = trailingslashit( $theme->get_template_directory() );
+		$this->url         = trailingslashit( $theme->get_template_directory_uri() );
+		$this->slug        = $theme->get_template();
+		$this->file        = $this->dir . DIRECTORY_SEPARATOR . $this->slug . '.php';
+		$this->basename    = basename( $this->dir ) . DIRECTORY_SEPARATOR . basename( $this->file );
+		$this->name        = $theme->get( 'Name' );
+		$this->description = $theme->get( 'Description' );
+		$this->author      = $theme->get( 'Author' );
+		$this->author_uri  = $theme->get( 'AuthorURI' );
+		$this->version     = $theme->get( 'Version' );
+		$this->min_php     = $theme->get( 'RequiresPHP' );
+		$this->min_wp      = $theme->get( 'RequiresWP' );
+		$this->uri         = $theme->get( 'ThemeURI' );
+		$this->domain_path = $theme->get( 'DomainPath' );
+		$this->update_uri  = $theme->get( 'UpdateURI' );
 	}
-
 }
