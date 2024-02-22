@@ -83,7 +83,7 @@ class Block {
 	 *
 	 * @return string
 	 */
-	public static function get_block_html( array $block, bool $render = false ): string {
+	public static function get_html( array $block, bool $render = false ): string {
 		$block['innerContent'] = $block['innerContent'] ?? [];
 		$block['innerHTML']    = $block['innerHTML'] ?? '';
 		$block['innerBlocks']  = $block['innerBlocks'] ?? [];
@@ -118,7 +118,7 @@ class Block {
 		$inner_content[] = $closing;
 
 		foreach ( $block['innerBlocks'] as $inner_block ) {
-			$inner_content[] = self::get_block_html( $inner_block );
+			$inner_content[] = static::get_html( $inner_block );
 		}
 
 		$block['innerContent'] = $inner_content;

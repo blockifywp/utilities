@@ -139,8 +139,29 @@ class Icon {
 		}
 
 		$icon = file_get_contents( $file );
-		$dom  = DOM::create( $icon );
-		$svg  = DOM::get_element( 'svg', $dom );
+
+		if ( $set === 'WordPress' ) {
+			$icon = str_replace(
+				[ 'fill="none"' ],
+				[ 'fill="currentColor"' ],
+				$icon
+			);
+		}
+
+		// Remove comments.
+		$icon = preg_replace( '/<!--(.|\s)*?-->/', '', $icon );
+
+		// Remove new lines.
+		$icon = preg_replace( '/\s+/', ' ', $icon );
+
+		// Remove tabs.
+		$icon = preg_replace( '/\t+/', '', $icon );
+
+		// Remove spaces between tags.
+		$icon = preg_replace( '/>\s+</', '><', $icon );
+
+		$dom = DOM::create( trim( $icon ) );
+		$svg = DOM::get_element( 'svg', $dom );
 
 		if ( ! $svg ) {
 			return '';
@@ -298,11 +319,11 @@ HTML;
 	 *
 	 * @since 0.4.8
 	 *
-	 * @param WP_REST_Request $request Request object.
+	 * @param ?WP_REST_Request $request Request object.
 	 *
 	 * @return mixed array|string
 	 */
-	private static function get_icon_data( WP_REST_Request $request ) {
+	public static function get_icon_data( ?WP_REST_Request $request ) {
 		$icon_data = [];
 		$icon_sets = Icon::get_icon_sets();
 
@@ -311,45 +332,18 @@ HTML;
 
 			foreach ( $icons as $icon ) {
 				$name = basename( $icon, '.svg' );
-				$icon = file_get_contents( $icon );
 
-				if ( $icon_set === 'WordPress' ) {
-					$icon = str_replace(
-						[ 'fill="none"' ],
-						[ 'fill="currentColor"' ],
-						$icon
-					);
-				}
-
-				// Remove comments.
-				$icon = preg_replace( '/<!--(.|\s)*?-->/', '', $icon );
-
-				// Remove new lines.
-				$icon = preg_replace( '/\s+/', ' ', $icon );
-
-				// Remove tabs.
-				$icon = preg_replace( '/\t+/', '', $icon );
-
-				// Remove spaces between tags.
-				$icon = preg_replace( '/>\s+</', '><', $icon );
-
-				$icon_data[ $icon_set ][ $name ] = trim( $icon );
+				$icon_data[ $icon_set ][ $name ] = self::get_svg( $icon_set, $name );
 			}
 		}
 
-		if ( $request->get_param( 'set' ) ) {
+		if ( $request && $request->get_param( 'set' ) ) {
 			$set = $request->get_param( 'set' );
-
-			if ( $request->get_param( 'icon' ) ) {
-
-				// TODO: Is string being used anywhere?
-				return $icon_data[ $set ][ $request->get_param( 'icon' ) ];
-			}
 
 			return $icon_data[ $set ];
 		}
 
-		if ( $request->get_param( 'sets' ) ) {
+		if ( $request && $request->get_param( 'sets' ) ) {
 			return array_keys( $icon_data );
 		}
 
