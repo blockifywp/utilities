@@ -28,7 +28,6 @@ use function str_replace;
 use function strtolower;
 use function trim;
 use function uniqid;
-use function wp_kses;
 use const GLOB_ONLYDIR;
 
 /**
@@ -290,6 +289,7 @@ HTML;
 		 * @param string $svg_title SVG title.
 		 */
 		$svg_icon    = apply_filters( 'blockify_placeholder_svg', $svg_icon, $svg_title );
+		$svg_icon    = static::sanitize_svg( $svg_icon );
 		$svg_dom     = DOM::create( $svg_icon );
 		$svg_element = DOM::get_element( 'svg', $svg_dom );
 
@@ -360,30 +360,9 @@ HTML;
 			$sanitizer = new Sanitizer();
 
 			$sanitizer->minify( true );
+			$sanitizer->removeXMLTag( true );
 
 			$svg = $sanitizer->sanitize( $svg );
-		} else {
-			$svg = wp_kses( $svg, [
-				'svg'   => [
-					'fill'    => true,
-					'viewBox' => true,
-					'xmlns'   => true,
-					'id'      => true,
-					'title'   => true,
-				],
-				'g'     => [
-					'id'              => true,
-					'stroke-width'    => true,
-					'stroke-linecap'  => true,
-					'stroke-linejoin' => true,
-				],
-				'path'  => [
-					'd' => true,
-				],
-				'title' => [
-					'id' => true,
-				],
-			] );
 		}
 
 		// Remove comments.
