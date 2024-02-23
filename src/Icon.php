@@ -6,12 +6,14 @@ namespace Blockify\Utilities;
 
 use DOMDocument;
 use DOMElement;
+use enshrined\svgSanitize\Sanitizer;
 use WP_REST_Request;
 use WP_REST_Server;
 use function add_action;
 use function add_filter;
 use function apply_filters;
 use function basename;
+use function class_exists;
 use function current_user_can;
 use function esc_html__;
 use function file_exists;
@@ -22,9 +24,11 @@ use function glob;
 use function implode;
 use function is_dir;
 use function is_null;
+use function str_replace;
 use function strtolower;
 use function trim;
 use function uniqid;
+use function wp_kses;
 use const GLOB_ONLYDIR;
 
 /**
@@ -108,13 +112,14 @@ class Icon {
 	 *
 	 * @since 0.9.10
 	 *
-	 * @param string          $set  Icon set.
-	 * @param string          $name Icon name.
-	 * @param string|int|null $size Icon size.
+	 * @param string          $set   Icon set.
+	 * @param string          $name  Icon name.
+	 * @param string|int|null $size  Icon size.
+	 * @param ?string         $title Icon title.
 	 *
 	 * @return string
 	 */
-	public static function get_svg( string $set, string $name, $size = null ): string {
+	public static function get_svg( string $set, string $name, $size = null, ?string $title = '' ): string {
 		$set = strtolower( $set );
 
 		static $cache = [];
@@ -125,7 +130,7 @@ class Icon {
 			return $cache[ $cache_key ];
 		}
 
-		$icon_sets = self::get_icon_sets();
+		$icon_sets = static::get_icon_sets();
 
 		if ( ! isset( $icon_sets[ $set ] ) ) {
 			return '';
@@ -138,29 +143,17 @@ class Icon {
 			return '';
 		}
 
-		$icon = file_get_contents( $file );
+		$html = file_get_contents( $file );
 
 		if ( $set === 'WordPress' ) {
-			$icon = str_replace(
+			$html = str_replace(
 				[ 'fill="none"' ],
 				[ 'fill="currentColor"' ],
-				$icon
+				$html
 			);
 		}
 
-		// Remove comments.
-		$icon = preg_replace( '/<!--(.|\s)*?-->/', '', $icon );
-
-		// Remove new lines.
-		$icon = preg_replace( '/\s+/', ' ', $icon );
-
-		// Remove tabs.
-		$icon = preg_replace( '/\t+/', '', $icon );
-
-		// Remove spaces between tags.
-		$icon = preg_replace( '/>\s+</', '><', $icon );
-
-		$dom = DOM::create( trim( $icon ) );
+		$dom = DOM::create( trim( $html ) );
 		$svg = DOM::get_element( 'svg', $dom );
 
 		if ( ! $svg ) {
@@ -173,13 +166,14 @@ class Icon {
 		$svg->setAttribute( 'aria-labelledby', $unique_id );
 		$svg->setAttribute( 'data-icon', $set . '-' . $name );
 
-		$label = Str::title_case( $name ) . __( ' Icon', 'blockify' );
-		$title = DOM::create_element( 'title', $dom );
+		$label     = $title ?: Str::title_case( $name ) . __( ' Icon', 'blockify' );
+		$title_tag = DOM::create_element( 'title', $dom );
 
-		$title->appendChild( $dom->createTextNode( $label ) );
-		$title->setAttribute( 'id', $unique_id );
+		$title_tag->appendChild( $dom->createTextNode( $label ) );
+		$title_tag->setAttribute( 'id', $unique_id );
 
-		$svg->insertBefore( $title, $svg->firstChild );
+		$svg->insertBefore( $title_tag, $svg->firstChild );
+
 
 		if ( $size ) {
 			$has_unit = Str::contains_any( (string) $size, 'px', 'em', 'rem', '%', 'vh', 'vw' );
@@ -203,7 +197,7 @@ class Icon {
 			$svg->setAttribute( 'fill', 'currentColor' );
 		}
 
-		$cache[ $cache_key ] = trim( $dom->saveHTML() );
+		$cache[ $cache_key ] = static::sanitize_svg( $dom->saveHTML() );
 
 		return $cache[ $cache_key ];
 	}
@@ -229,7 +223,7 @@ class Icon {
 
 		$args = [
 			'permission_callback' => static fn() => current_user_can( 'edit_posts' ),
-			'callback'            => static fn( WP_REST_Request $request ): array => self::get_icon_data( $request ),
+			'callback'            => static fn( WP_REST_Request $request ): array => static::get_icon_data( $request ),
 			'methods'             => WP_REST_Server::READABLE,
 			[
 				'args' => [
@@ -333,7 +327,7 @@ HTML;
 			foreach ( $icons as $icon ) {
 				$name = basename( $icon, '.svg' );
 
-				$icon_data[ $icon_set ][ $name ] = self::get_svg( $icon_set, $name );
+				$icon_data[ $icon_set ][ $name ] = static::get_svg( $icon_set, $name, 24, null );
 			}
 		}
 
@@ -348,6 +342,66 @@ HTML;
 		}
 
 		return $icon_data;
+	}
+
+	/**
+	 * Sanitizes SVG string.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $svg SVG string.
+	 *
+	 * @return string
+	 */
+	public static function sanitize_svg( string $svg ): string {
+
+		// Sanitize SVG.
+		if ( class_exists( 'enshrined\svgSanitize\Sanitizer' ) ) {
+			$sanitizer = new Sanitizer();
+
+			$sanitizer->minify( true );
+
+			$svg = $sanitizer->sanitize( $svg );
+		} else {
+			$svg = wp_kses( $svg, [
+				'svg'   => [
+					'fill'    => true,
+					'viewBox' => true,
+					'xmlns'   => true,
+					'id'      => true,
+					'title'   => true,
+				],
+				'g'     => [
+					'id'              => true,
+					'stroke-width'    => true,
+					'stroke-linecap'  => true,
+					'stroke-linejoin' => true,
+				],
+				'path'  => [
+					'd' => true,
+				],
+				'title' => [
+					'id' => true,
+				],
+			] );
+		}
+
+		// Remove comments.
+		$svg = preg_replace( '/<!--(.|\s)*?-->/', '', $svg );
+
+		// Remove new lines.
+		$svg = preg_replace( '/\s+/', ' ', $svg );
+
+		// Remove tabs.
+		$svg = preg_replace( '/\t+/', '', $svg );
+
+		// Remove spaces between tags.
+		$svg = preg_replace( '/>\s+</', '><', $svg );
+
+		// Correct viewBox.
+		$svg = str_replace( 'viewbox=', 'viewBox=', $svg );
+
+		return trim( $svg );
 	}
 
 }
