@@ -357,12 +357,16 @@ HTML;
 
 		// Sanitize SVG.
 		if ( class_exists( 'enshrined\svgSanitize\Sanitizer' ) ) {
-			$sanitizer = new Sanitizer();
+			static $sanitizer = null;
 
-			$sanitizer->minify( true );
-			$sanitizer->removeXMLTag( true );
+			if ( is_null( $sanitizer ) ) {
+				$sanitizer = new Sanitizer();
 
-			$svg = $sanitizer->sanitize( $svg );
+				$sanitizer->minify( true );
+				$sanitizer->removeXMLTag( true );
+			}
+
+			$svg = $sanitizer->sanitize( $svg ) ?: '';
 		}
 
 		// Remove comments.
