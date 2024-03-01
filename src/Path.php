@@ -34,7 +34,7 @@ class Path {
 				DIRECTORY_SEPARATOR,
 				[
 					$project_dir,
-					static::get_parts( $package_dir, -3 ),
+					static::get_segments( $package_dir, -3 ),
 				]
 			)
 		);
@@ -49,7 +49,7 @@ class Path {
 	 * @return string
 	 */
 	public static function get_package_url( string $project_dir, string $package_dir ): string {
-		$package_path = static::get_parts( $package_dir, -3, true );
+		$package_path = static::get_segments( $package_dir, -3, true );
 		return static::get_project_url( $project_dir ) . Str::unleadingslashit( $package_path );
 	}
 
@@ -72,29 +72,29 @@ class Path {
 	 * @return string
 	 */
 	public static function get_project_url( string $project_dir ): string {
-		return content_url( static::get_parts( $project_dir, -2, true ) );
+		return content_url( static::get_segments( $project_dir, -2, true ) );
 	}
 
 	/**
-	 * Extracts specific number of parts from a path.
+	 * Extracts specific number of segments from a path.
 	 *
-	 * @param string $path  The input path.
-	 * @param int    $parts Positive for first parts, negative for last parts.
-	 * @param bool   $slash Whether to include the trailing slash.
+	 * @param string $path   The input path.
+	 * @param int    $number Positive for first segments, negative for last segments.
+	 * @param bool   $slash  Whether to include leading and trailing slash.
 	 *
 	 * @return string
 	 */
-	public static function get_parts( string $path, int $parts, bool $slash = false ): string {
-		$path_parts = explode( DIRECTORY_SEPARATOR, trim( $path, DIRECTORY_SEPARATOR ) );
+	public static function get_segments( string $path, int $number, bool $slash = false ): string {
+		$path_segments = explode( DIRECTORY_SEPARATOR, trim( $path, DIRECTORY_SEPARATOR ) );
 
-		if ( $parts > 0 ) {
-			$extracted_parts = array_slice( $path_parts, 0, $parts );
+		if ( $number > 0 ) {
+			$extracted_segments = array_slice( $path_segments, 0, $number );
 		} else {
-			$extracted_parts = array_slice( $path_parts, $parts );
+			$extracted_segments = array_slice( $path_segments, $number );
 		}
 
 		$slash = $slash ? DIRECTORY_SEPARATOR : '';
 
-		return $slash . implode( DIRECTORY_SEPARATOR, $extracted_parts ) . $slash;
+		return $slash . implode( DIRECTORY_SEPARATOR, $extracted_segments ) . $slash;
 	}
 }
