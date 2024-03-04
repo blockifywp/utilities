@@ -4,7 +4,10 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
+use function array_map;
 use function capital_P_dangit;
+use function explode;
+use function implode;
 use function lcfirst;
 use function ltrim;
 use function preg_replace;
@@ -183,6 +186,24 @@ class Str {
 		$strings = preg_split( '/(?=[A-Z])/', lcfirst( $string ) );
 
 		return strtolower( implode( '-', $strings ) );
+	}
+
+	/**
+	 * Converts kebab-case string to camelCase.
+	 *
+	 * @param string $string kebab-case string to convert.
+	 *
+	 * @return string
+	 */
+	public static function kebab_to_camel( string $string ): string {
+		$camel = array_map(
+			static function ( string $string ): string {
+				return ucwords( $string );
+			},
+			explode( '-', $string )
+		);
+
+		return lcfirst( implode( '', $camel ) );
 	}
 
 	/**
