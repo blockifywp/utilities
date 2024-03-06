@@ -11,6 +11,7 @@ use function explode;
 use function implode;
 use function trailingslashit;
 use function trim;
+use function untrailingslashit;
 use const DIRECTORY_SEPARATOR;
 
 /**
@@ -33,7 +34,7 @@ class Path {
 			implode(
 				DIRECTORY_SEPARATOR,
 				[
-					$project_dir,
+					untrailingslashit( $project_dir ),
 					static::get_segments( $package_dir, -3 ),
 				]
 			)
@@ -50,6 +51,7 @@ class Path {
 	 */
 	public static function get_package_url( string $project_dir, string $package_dir ): string {
 		$package_path = static::get_segments( $package_dir, -3, true );
+
 		return static::get_project_url( $project_dir ) . Str::unleadingslashit( $package_path );
 	}
 
