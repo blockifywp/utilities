@@ -89,15 +89,15 @@ class Str {
 	 * @return string
 	 */
 	public static function remove_line_breaks( string $string ): string {
-		return trim( str_replace(
-			[
-				"\r",
-				"\n",
-				PHP_EOL,
-			],
-			'',
-			$string
-		) );
+
+		// Remove zero width spaces and other invisible characters.
+		$string = preg_replace( '/^[\pZ\pC]+|[\pZ\pC]+$/u', '', $string );
+
+		// Replace line breaks.
+		str_replace( [ "\r", "\n", PHP_EOL, ], '', $string
+		);
+
+		return trim( $string );
 	}
 
 	/**

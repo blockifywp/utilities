@@ -12,6 +12,7 @@ use function explode;
 use function file_exists;
 use function get_template_directory;
 use function implode;
+use function in_array;
 use function is_array;
 use function is_null;
 use function is_string;
@@ -81,9 +82,17 @@ class CSS {
 				(array) $theme_json->settings->color->palette
 			);
 
+			$system_colors = Color::SYSTEM_COLORS;
+
+			if ( in_array( $custom_property, $system_colors, true ) ) {
+				if ( $custom_property === 'current' ) {
+					return 'currentcolor';
+				}
+			}
+
 			$color_slugs = array_diff(
 				wp_list_pluck( $colors, 'slug' ),
-				Color::SYSTEM_COLORS
+				$system_colors
 			);
 
 			if ( in_array( $custom_property, $color_slugs, true ) ) {
