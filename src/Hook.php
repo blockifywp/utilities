@@ -15,7 +15,9 @@ use function trim;
 /**
  * Class Hooks.
  *
- * @package Blockify\Core
+ * Inspired by Viktor Szépe Hook Annotations.
+ *
+ * @link https://github.com/szepeviktor/SentencePress
  */
 class Hook {
 
@@ -27,10 +29,10 @@ class Hook {
 	 * @return void
 	 */
 	public static function annotations( object $object ): void {
-		$reflection = new ReflectionClass( $object );
+		$reflection     = new ReflectionClass( $object );
+		$public_methods = $reflection->getMethods( ReflectionMethod::IS_PUBLIC );
 
-		// Look for hook tag in all public methods.
-		foreach ( $reflection->getMethods( ReflectionMethod::IS_PUBLIC ) as $method ) {
+		foreach ( $public_methods as $method ) {
 
 			// Do not hook constructors.
 			if ( $method->isConstructor() ) {

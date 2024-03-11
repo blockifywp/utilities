@@ -17,6 +17,7 @@ use function strlen;
 use function strpos;
 use function trim;
 use function ucwords;
+use const DIRECTORY_SEPARATOR;
 use const PHP_EOL;
 
 /**
@@ -114,7 +115,8 @@ class Str {
 	 * @return string|array
 	 */
 	public static function between( string $start, string $end, string $string, bool $omit = false, bool $all = false ) {
-		$pattern = '/' . preg_quote( $start, '/' ) . '(.*?)' . preg_quote( $end, '/' ) . '/s';
+		$ds      = DIRECTORY_SEPARATOR;
+		$pattern = $ds . preg_quote( $start, $ds ) . '(.*?)' . preg_quote( $end, $ds ) . '/s';
 		preg_match_all( $pattern, $string, $matches );
 
 		$selected_matches = $omit ? $matches[1] : $matches[0];
@@ -220,7 +222,7 @@ class Str {
 	 * @return string String with leading slash added.
 	 */
 	public static function leadingslashit( string $string ): string {
-		return '/' . self::unleadingslashit( $string );
+		return DIRECTORY_SEPARATOR . self::unleadingslashit( $string );
 	}
 
 	/**
