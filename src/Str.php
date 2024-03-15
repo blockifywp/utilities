@@ -115,7 +115,7 @@ class Str {
 	 * @return string|array
 	 */
 	public static function between( string $start, string $end, string $string, bool $omit = false, bool $all = false ) {
-		$ds      = DIRECTORY_SEPARATOR;
+		$ds      = '/'; // Cannot use DIRECTORY_SEPARATOR because of Windows.
 		$pattern = $ds . preg_quote( $start, $ds ) . '(.*?)' . preg_quote( $end, $ds ) . '/s';
 		preg_match_all( $pattern, $string, $matches );
 
