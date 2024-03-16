@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use function in_array;
+use function is_string;
 
 /**
  * Class Arr
@@ -31,5 +32,28 @@ class Arr {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Recursively converts all array keys to camel case.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $array The array to convert.
+	 *
+	 * @return array
+	 */
+	public static function keys_to_camel_case( array $array ): array {
+		$converted = [];
+
+		foreach ( $array as $key => $value ) {
+			if ( is_string( $key ) ) {
+				$key = Str::to_camel_case( $key );
+			}
+
+			$converted[ $key ] = is_array( $value ) ? static::keys_to_camel_case( $value ) : $value;
+		}
+
+		return $converted;
 	}
 }

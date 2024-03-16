@@ -4,9 +4,8 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
-use function array_map;
+use function _deprecated_function;
 use function capital_P_dangit;
-use function explode;
 use function implode;
 use function lcfirst;
 use function ltrim;
@@ -193,19 +192,42 @@ class Str {
 	/**
 	 * Converts kebab-case string to camelCase.
 	 *
+	 * @deprecated Use `Str::to_camel_case` instead.
+	 *
 	 * @param string $string kebab-case string to convert.
 	 *
 	 * @return string
 	 */
 	public static function kebab_to_camel( string $string ): string {
-		$camel = array_map(
-			static function ( string $string ): string {
-				return ucwords( $string );
-			},
-			explode( '-', $string )
+		_deprecated_function(
+			__METHOD__,
+			'1.0.0',
+			static::class . '::to_camel_case'
 		);
 
-		return lcfirst( implode( '', $camel ) );
+		return static::to_camel_case( $string );
+	}
+
+	/**
+	 * Converts a string to camelCase.
+	 *
+	 * @param string $string The string to convert.
+	 *
+	 * @return string
+	 */
+	public static function to_camel_case( string $string ): string {
+		return lcfirst(
+			str_replace(
+				' ', '',
+				ucwords(
+					str_replace(
+						[ '-', '_' ],
+						' ',
+						$string
+					)
+				)
+			)
+		);
 	}
 
 	/**

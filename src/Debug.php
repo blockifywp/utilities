@@ -4,6 +4,7 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
+use function add_action;
 use function debug_backtrace;
 use function defined;
 use function json_encode;
@@ -32,26 +33,14 @@ class Debug {
 	/**
 	 * Log data to the console.
 	 *
-	 * @param mixed $data Data to log.
+	 * @param mixed $data  Data to log.
+	 * @param bool  $trace Whether to log the stacktrace.
 	 *
 	 * @return void
 	 */
-	public static function console_log( $data ): void {
-		$stacktrace = self::stacktrace();
-
-		echo '<script>';
-		//echo 'console.log("%cData", "color:blue");';
-		echo 'console.log(' . json_encode( $data ) . ');';
-
-		if ( $stacktrace ) {
-			//echo 'console.log("%cStacktrace", "color:blue");';
-
-			foreach ( $stacktrace as $trace ) {
-				echo 'console.log(' . json_encode( $trace ) . ');';
-			}
-		}
-
-		echo '</script>';
+	public static function console_log( $data, bool $trace = false ): void {
+		add_action( 'wp_footer', static fn() => static::render_log( $data, $trace ) );
+		add_action( 'admin_footer', static fn() => static::render_log( $data, $trace ) );
 	}
 
 	/**
@@ -78,6 +67,29 @@ class Debug {
 		}
 
 		return $stacktrace;
+	}
+
+	/**
+	 * Render the log.
+	 *
+	 * @param mixed $data  Data to log.
+	 * @param bool  $trace Whether to log the stacktrace.
+	 *
+	 * @return void
+	 */
+	private static function render_log( $data, bool $trace = true ): void {
+		$stacktrace = self::stacktrace();
+
+		echo '<script>';
+		echo 'console.log(' . json_encode( $data ) . ');';
+
+		if ( $trace && $stacktrace ) {
+			foreach ( $stacktrace as $trace ) {
+				echo 'console.log(' . json_encode( $trace ) . ');';
+			}
+		}
+
+		echo '</script>';
 	}
 
 }
