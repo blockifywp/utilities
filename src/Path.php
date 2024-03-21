@@ -32,10 +32,10 @@ class Path {
 	public static function get_package_dir( string $project_dir, string $package_dir ): string {
 		return trailingslashit(
 			implode(
-				DIRECTORY_SEPARATOR,
+				'/', // DIRECTORY_SEPARATOR breaks in Windows.
 				[
 					untrailingslashit( $project_dir ),
-					static::get_segments( $package_dir, -3 ),
+					static::get_segment( $package_dir, -3 ),
 				]
 			)
 		);
@@ -50,7 +50,7 @@ class Path {
 	 * @return string
 	 */
 	public static function get_package_url( string $project_dir, string $package_dir ): string {
-		$package_path = static::get_segments( $package_dir, -3, true );
+		$package_path = static::get_segment( $package_dir, -3, true );
 
 		return static::get_project_url( $project_dir ) . Str::unleadingslashit( $package_path );
 	}
@@ -74,29 +74,23 @@ class Path {
 	 * @return string
 	 */
 	public static function get_project_url( string $project_dir ): string {
-		return content_url( static::get_segments( $project_dir, -2, true ) );
+		return content_url( static::get_segment( $project_dir, -2, true ) );
 	}
 
 	/**
-	 * Extracts specific number of segments from a path.
+	 * Extracts specific number of segments from a path as string.
 	 *
 	 * @param string $path   The input path.
 	 * @param int    $number Positive for first segments, negative for last segments.
-	 * @param bool   $slash  Whether to include leading and trailing slash.
+	 * @param bool   $wrap   Whether to wrap in leading and trailing slashes.
 	 *
 	 * @return string
 	 */
-	public static function get_segments( string $path, int $number, bool $slash = false ): string {
-		$path_segments = explode( DIRECTORY_SEPARATOR, trim( $path, DIRECTORY_SEPARATOR ) );
+	public static function get_segment( string $path, int $number, bool $wrap = false ): string {
+		$segments  = explode( DIRECTORY_SEPARATOR, trim( $path, DIRECTORY_SEPARATOR ) );
+		$extracted = $number > 0 ? array_slice( $segments, 0, $number ) : array_slice( $segments, $number );
+		$slash     = $wrap ? '/' : ''; // DIRECTORY_SEPARATOR breaks in Windows.
 
-		if ( $number > 0 ) {
-			$extracted_segments = array_slice( $path_segments, 0, $number );
-		} else {
-			$extracted_segments = array_slice( $path_segments, $number );
-		}
-
-		$slash = $slash ? DIRECTORY_SEPARATOR : '';
-
-		return $slash . implode( DIRECTORY_SEPARATOR, $extracted_segments ) . $slash;
+		return $slash . implode( '/', $extracted ) . $slash;
 	}
 }
