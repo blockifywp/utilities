@@ -139,14 +139,18 @@ class Pattern {
 			}
 		}
 
+		$slug = ( $categories[0] ?? 'common' ) . '-' . $headers['slug'];
+
+		$content = Str::replace_first(
+			Str::between( '<?php', '?>', $content ),
+			'',
+			$content
+		);
+
 		$pattern = [
-			'slug'        => $categories[0] . '-' . $headers['slug'],
+			'slug'        => $slug,
 			'title'       => $headers['title'],
-			'content'     => Str::replace_first(
-				Str::between( '<?php', '?>', $content ),
-				'',
-				$content
-			),
+			'content'     => $content,
 			'categories'  => [ ...$categories ],
 			'description' => $headers['description'] ?? '',
 			'blockTypes'  => explode( ',', $headers['block_types'] ?? [] ),
