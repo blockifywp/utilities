@@ -47,49 +47,24 @@ class DOM {
 			return $dom;
 		}
 
-		$libxml_previous_state   = libxml_use_internal_errors( true );
 		$dom->preserveWhiteSpace = false;
+		$dom->formatOutput       = true;
 
-		if ( defined( 'LIBXML_HTML_NOIMPLIED' ) && defined( 'LIBXML_HTML_NODEFDTD' ) ) {
-			$options = LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD;
-		} else {
-			if ( defined( 'LIBXML_HTML_NOIMPLIED' ) ) {
-				$options = LIBXML_HTML_NOIMPLIED;
-			} else {
-				if ( defined( 'LIBXML_HTML_NODEFDTD' ) ) {
-					$options = LIBXML_HTML_NODEFDTD;
-				} else {
-					$options = 0;
-				}
-			}
-		}
+		// Setting libxml options with bitwise operator.
+		$options = 0;
+		$options |= defined( 'LIBXML_HTML_NOIMPLIED' ) ? LIBXML_HTML_NOIMPLIED : 0;
+		$options |= defined( 'LIBXML_HTML_NODEFDTD' ) ? LIBXML_HTML_NODEFDTD : 0;
 
 		// @see https://stackoverflow.com/questions/13280200/convert-unicode-to-html-entities-hex.
-		$html = preg_replace_callback(
-			'/[\x{80}-\x{10FFFF}]/u',
-			static fn( array $matches ): string => sprintf(
-				'&#x%s;',
-				ltrim(
-					strtoupper(
-						bin2hex(
-							iconv(
-								'UTF-8',
-								'UCS-4',
-								current( $matches )
-							)
-						)
-					),
-					'0'
-				)
-			),
-			$html
-		);
+		// @todo Check if all DOMs need this.
+		$html = static::convert_unicode_to_html_entities( $html );
+
+		libxml_use_internal_errors( true );
 
 		$dom->loadHTML( $html, $options );
-		$dom->formatOutput = true;
 
 		libxml_clear_errors();
-		libxml_use_internal_errors( $libxml_previous_state );
+		libxml_use_internal_errors( false );
 
 		return $dom;
 	}
@@ -307,6 +282,37 @@ class DOM {
 					$styles
 				)
 			)
+		);
+	}
+
+	/**
+	 * Returns a formatted HTML string from a DOMDocument object.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $html HTML string to convert to DOM.
+	 *
+	 * @return string
+	 */
+	private static function convert_unicode_to_html_entities( string $html ): string {
+		return preg_replace_callback(
+			'/[\x{80}-\x{10FFFF}]/u',
+			static fn( array $matches ): string => sprintf(
+				'&#x%s;',
+				ltrim(
+					strtoupper(
+						bin2hex(
+							iconv(
+								'UTF-8',
+								'UCS-4',
+								current( $matches )
+							)
+						)
+					),
+					'0'
+				)
+			),
+			$html
 		);
 	}
 }
