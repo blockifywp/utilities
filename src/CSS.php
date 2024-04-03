@@ -64,55 +64,65 @@ class CSS {
 	 * @return string
 	 */
 	public static function format_custom_property( string $custom_property ): string {
-		if ( ! str_contains( $custom_property, 'var:' ) ) {
+		if ( str_contains( $custom_property, 'var:' ) ) {
+			return str_replace(
+				[ 'var:', '|', ],
+				[ 'var(--wp--', '--', ],
+				$custom_property . ')'
+			);
+		}
+
+		static $global_settings = null;
+		static $theme_json = null;
+
+		if ( is_null( $global_settings ) ) {
 			$global_settings = function_exists( 'wp_get_global_settings' ) ? wp_get_global_settings() : [];
+		}
+
+		if ( ! $global_settings ) {
+			return $custom_property;
+		}
+
+		if ( is_null( $theme_json ) ) {
 			$theme_json_file = get_template_directory() . '/theme.json';
 			$theme_json      = [];
 
 			if ( file_exists( $theme_json_file ) ) {
 				$theme_json = wp_json_file_decode( $theme_json_file );
 			}
+		}
 
-			if ( ! isset( $global_settings['color']['palette']['theme'] ) && ! isset( $theme_json->settings->color->palette ) ) {
-				return $custom_property;
-			}
-
-			$colors = array_merge(
-				(array) ( $global_settings['color']['palette']['theme'] ?? [] ),
-				(array) $theme_json->settings->color->palette
-			);
-
-			$system_colors = Color::SYSTEM_COLORS;
-
-			if ( in_array( $custom_property, $system_colors, true ) ) {
-				if ( $custom_property === 'current' ) {
-					return 'currentcolor';
-				}
-			}
-
-			$color_slugs = array_diff(
-				wp_list_pluck( $colors, 'slug' ),
-				$system_colors
-			);
-
-			if ( in_array( $custom_property, $color_slugs, true ) ) {
-				return "var(--wp--preset--color--{$custom_property})";
-			}
-
+		if ( ! $theme_json ) {
 			return $custom_property;
 		}
 
-		return str_replace(
-			[
-				'var:',
-				'|',
-			],
-			[
-				'var(--wp--',
-				'--',
-			],
-			$custom_property . ')'
+		if ( ! isset( $global_settings['color']['palette']['theme'] ) && ! isset( $theme_json->settings->color->palette ) ) {
+			return $custom_property;
+		}
+
+		$colors = array_merge(
+			(array) ( $global_settings['color']['palette']['theme'] ?? [] ),
+			(array) $theme_json->settings->color->palette
 		);
+
+		$system_colors = Color::SYSTEM_COLORS;
+
+		if ( in_array( $custom_property, $system_colors, true ) ) {
+			if ( $custom_property === 'current' ) {
+				return 'currentcolor';
+			}
+		}
+
+		$color_slugs = array_diff(
+			wp_list_pluck( $colors, 'slug' ),
+			$system_colors
+		);
+
+		if ( in_array( $custom_property, $color_slugs, true ) ) {
+			return "var(--wp--preset--color--{$custom_property})";
+		}
+
+		return $custom_property;
 	}
 
 	/**
