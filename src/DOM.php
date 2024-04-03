@@ -232,4 +232,81 @@ class DOM {
 
 		return self::node_to_element( $element );
 	}
+
+	/**
+	 * Gets classes from a DOM element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMElement $element DOM element.
+	 *
+	 * @return array
+	 */
+	public static function get_classes( DOMElement $element ): array {
+		$classes = explode( ' ', $element->getAttribute( 'class' ) );
+
+		return array_filter( $classes );
+	}
+
+	/**
+	 * Adds CSS classes to a DOM element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMElement $element DOM element.
+	 * @param array      $classes Classes to add.
+	 *
+	 * @return void
+	 */
+	public static function add_classes( DOMElement $element, array $classes ): void {
+		$element->setAttribute(
+			'class',
+			trim(
+				implode(
+					' ',
+					array_unique(
+						array_merge(
+							self::get_classes( $element ),
+							$classes
+						)
+					)
+				)
+			)
+		);
+	}
+
+	/**
+	 * Gets styles from a DOM element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMElement $element DOM element.
+	 *
+	 * @return array
+	 */
+	public static function get_styles( DOMElement $element ): array {
+		return CSS::string_to_array( $element->getAttribute( 'style' ) );
+	}
+
+	/**
+	 * Adds CSS styles to a DOM element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMElement $element DOM element.
+	 * @param array      $styles  Styles to add.
+	 *
+	 * @return void
+	 */
+	public static function add_styles( DOMElement $element, array $styles ): void {
+		$element->setAttribute(
+			'style',
+			CSS::array_to_string(
+				array_merge(
+					self::get_styles( $element ),
+					$styles
+				)
+			)
+		);
+	}
 }
