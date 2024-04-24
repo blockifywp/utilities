@@ -20,7 +20,6 @@
     }
   },
   "require": {
-    "enshrined/svg-sanitize": "dev-master",
     "psr/container": "^2.0@dev"
   }
 }
