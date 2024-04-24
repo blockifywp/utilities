@@ -9,6 +9,7 @@ use DOMElement;
 use DOMXPath;
 use Exception;
 use WP_Error;
+use function addslashes;
 use function bin2hex;
 use function current;
 use function iconv;
@@ -159,8 +160,8 @@ class DOM {
 	 *
 	 * @since 0.9.26
 	 *
-	 * @param DOMDocument $dom        DOM document or element.
 	 * @param string      $class_name Element class name.
+	 * @param DOMDocument $dom        DOM document or element.
 	 * @param string      $tag        Element tag name (optional).
 	 *
 	 * @return array
@@ -209,21 +210,6 @@ class DOM {
 	}
 
 	/**
-	 * Gets classes from a DOM element.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param DOMElement $element DOM element.
-	 *
-	 * @return array
-	 */
-	public static function get_classes( DOMElement $element ): array {
-		$classes = explode( ' ', $element->getAttribute( 'class' ) );
-
-		return array_filter( $classes );
-	}
-
-	/**
 	 * Adds CSS classes to a DOM element.
 	 *
 	 * @since 1.0.0
@@ -251,7 +237,7 @@ class DOM {
 	}
 
 	/**
-	 * Gets styles from a DOM element.
+	 * Gets classes from a DOM element.
 	 *
 	 * @since 1.0.0
 	 *
@@ -259,8 +245,10 @@ class DOM {
 	 *
 	 * @return array
 	 */
-	public static function get_styles( DOMElement $element ): array {
-		return CSS::string_to_array( $element->getAttribute( 'style' ) );
+	public static function get_classes( DOMElement $element ): array {
+		$classes = explode( ' ', $element->getAttribute( 'class' ) );
+
+		return array_filter( $classes );
 	}
 
 	/**
@@ -283,6 +271,49 @@ class DOM {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Gets styles from a DOM element.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMElement $element DOM element.
+	 *
+	 * @return array
+	 */
+	public static function get_styles( DOMElement $element ): array {
+		return CSS::string_to_array( $element->getAttribute( 'style' ) );
+	}
+
+	/**
+	 * Returns an array of DOM elements that contain the specified text content.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param DOMDocument $dom  The DOM document to search within.
+	 * @param string      $text Text to search for in elements.
+	 * @param string      $tag  Optional. The tag name to limit the search; default is '*' (all elements).
+	 *
+	 * @return DOMElement[]
+	 */
+	public static function get_elements_by_content( DOMDocument $dom, string $text, string $tag = '*' ): array {
+		$xpath    = new DOMXPath( $dom );
+		$query    = sprintf( "//%s[contains(., '%s')]", $tag, addslashes( $text ) );
+		$nodes    = $xpath->query( $query );
+		$elements = [];
+
+		if ( ! $nodes ) {
+			return $elements;
+		}
+
+		foreach ( $nodes as $node ) {
+			if ( $node instanceof DOMElement ) {
+				$elements[] = $node;
+			}
+		}
+
+		return $elements;
 	}
 
 	/**
