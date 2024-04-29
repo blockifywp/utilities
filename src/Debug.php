@@ -46,8 +46,6 @@ class Debug {
 	/**
 	 * Log data to the console.
 	 *
-	 * @param mixed $data Data to log.
-	 *
 	 * @return void
 	 */
 	public static function stacktrace(): array {

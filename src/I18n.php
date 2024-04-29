@@ -4,8 +4,8 @@ declare( strict_types=1 );
 
 namespace Blockify\Core\Services;
 
-use Blockify\Core\Data\Plugin;
-use Blockify\Core\Traits\HookAnnotations;
+use Blockify\Utilities\Data;
+use function load_plugin_textdomain;
 
 /**
  * Class I18n.
@@ -14,18 +14,18 @@ use Blockify\Core\Traits\HookAnnotations;
  */
 class I18n {
 
-	private Plugin $plugin;
+	private Data $plugin;
 
 	/**
 	 * I18n constructor.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Plugin $plugin Plugin instance.
+	 * @param Data $plugin Plugin instance.
 	 *
 	 * @return void
 	 */
-	public function __construct( Plugin $plugin ) {
+	public function __construct( Data $plugin ) {
 		$this->plugin = $plugin;
 	}
 

@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace Blockify\Utilities;
 
 use function in_array;
+use function is_array;
 use function is_string;
 
 /**

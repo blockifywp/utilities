@@ -4,6 +4,7 @@ declare( strict_types=1 );
 
 namespace Blockify\Utilities;
 
+use Blockify\Dom\CSS;
 use WP;
 use function implode;
 use function is_admin;

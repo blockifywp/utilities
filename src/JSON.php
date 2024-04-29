@@ -33,13 +33,13 @@ class JSON {
 	 *       'value' => 'property_value,
 	 *     )
 	 *
+	 * @see   WP_Theme_JSON::compute_theme_vars()
+	 *
 	 * @since 5.8.0
 	 *
 	 * @param array $custom_values Settings to process.
 	 *
 	 * @return array The modified $declarations.
-	 * @see   WP_Theme_JSON::compute_theme_vars()
-	 *
 	 */
 	public static function compute_theme_vars( array $custom_values ): array {
 		$declarations = [];
@@ -82,6 +82,8 @@ class JSON {
 	 *       '--wp--nested-property--sub-property': 'value'
 	 *     }
 	 *
+	 * @see   WP_Theme_JSON::flatten_tree()
+	 *
 	 * @since 5.8.0
 	 *
 	 * @param array  $tree   Input tree to process.
@@ -90,8 +92,6 @@ class JSON {
 	 * @param string $token  Optional. Token to use between levels. Default '--'.
 	 *
 	 * @return array The flattened tree.
-	 * @see   WP_Theme_JSON::flatten_tree()
-	 *
 	 */
 	public static function flatten_tree( array $tree, string $prefix = '', string $token = '--' ): array {
 		$result = [];

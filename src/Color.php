@@ -7,6 +7,7 @@ namespace Blockify\Utilities;
 use stdClass;
 use function _wp_to_kebab_case;
 use function array_replace;
+use function explode;
 use function file_exists;
 use function get_stylesheet_directory;
 use function get_template_directory;
