@@ -2,9 +2,9 @@
 
 declare( strict_types=1 );
 
-namespace Blockify\Core\Services;
+namespace Blockify\Utilities;
 
-use Blockify\Utilities\Data;
+use Blockify\Hooks\Hook;
 use function load_plugin_textdomain;
 
 /**
@@ -14,19 +14,40 @@ use function load_plugin_textdomain;
  */
 class I18n {
 
-	private Data $plugin;
+	private Data $data;
 
 	/**
 	 * I18n constructor.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param Data $plugin Plugin instance.
+	 * @param Data $data Plugin instance.
 	 *
 	 * @return void
 	 */
-	public function __construct( Data $plugin ) {
-		$this->plugin = $plugin;
+	public function __construct( Data $data ) {
+		$this->data = $data;
+	}
+
+	/**
+	 * Register factory.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Data $data Plugin instance.
+	 *
+	 * @return self
+	 */
+	public static function register( Data $data ): self {
+		static $instances = [];
+
+		if ( ! isset( $instances[ $data->slug ] ) ) {
+			$instances[ $data->slug ] = new self( $data );
+
+			Hook::annotations( $instances[ $data->slug ] );
+		}
+
+		return $instances[ $data->slug ];
 	}
 
 	/**
@@ -40,9 +61,9 @@ class I18n {
 	 */
 	public function load_textdomain(): void {
 		load_plugin_textdomain(
-			$this->plugin->slug,
+			$this->data->slug,
 			false,
-			$this->plugin->dir . $this->plugin->domain_path
+			$this->data->dir . $this->data->domain_path
 		);
 	}
 
